@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Calendar, Users, BookOpen, FileText, MessageSquare } from "lucide-react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Calendar, Users, BookOpen, FileText, MessageSquare } from "lucide-react";
 
 // Sample project data
 const project = {
@@ -39,24 +39,25 @@ const project = {
     { date: "Mar 5, 2024", content: "Started working on the frontend interface for the system." },
     { date: "Feb 20, 2024", content: "Collected training data for the facial recognition model." },
   ],
-}
+};
 
-export default function ProjectDetail({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState("overview")
+export default function ProjectDetail() {
+ // Ensure params are logged correctly
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("overview");
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
-        return "bg-green-500"
+        return "bg-green-500";
       case "In Progress":
-        return "bg-blue-500"
+        return "bg-blue-500";
       case "Not Started":
-        return "bg-gray-500"
+        return "bg-gray-500";
       default:
-        return "bg-purple"
+        return "bg-purple";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -232,6 +233,5 @@ export default function ProjectDetail({ params }: { params: { id: string } }) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
-
