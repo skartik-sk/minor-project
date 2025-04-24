@@ -1,0 +1,16 @@
+# Minor Project: Project Management Application
+
+## Overview
+- The project is a web application for managing projects, built using Next.js with the App Router.
+- Tailwind CSS is used for styling the frontend.
+- PostgreSQL is used as the database for storing user and project data.
+- User authentication is implemented using bcrypt for password hashing and JWT for session management.
+- The application includes the following features:
+  - User login and signup pages.
+  - A dashboard for managing projects.
+  - Functionality to create, view, and update project details.
+  - Dark mode support for the entire application.
+- Backend integration is planned to handle user authentication, project management, and status updates.
+- The folder structure includes separate directories for pages, components, hooks, and utility functions.
+- The project is currently in development, with frontend pages and components implemented.
+- Backend APIs and database integration are yet to be completed.

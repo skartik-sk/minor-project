@@ -14,6 +14,7 @@ export default function SignupPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [enrollment, setEnrollment] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -53,6 +54,16 @@ export default function SignupPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="enrollment">Enrollment Number</Label>
+              <Input
+                id="enrollment"
+                placeholder="Enter your enrollment number"
+                value={enrollment}
+                onChange={(e) => setEnrollment(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -64,7 +75,7 @@ export default function SignupPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-purple hover:bg-purple-dark" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-accent mt-5  text-accent-foreground hover:bg-accent-dark" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
             <div className="text-center text-sm">

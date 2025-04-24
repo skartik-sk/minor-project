@@ -10,9 +10,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { X } from "lucide-react"
 
 export default function CreateProject() {
   const [isLoading, setIsLoading] = useState(false)
+  const [technologies, setTechnologies] = useState<string[]>([])
+  const [teamMembers, setTeamMembers] = useState<{ name: string; enrollment: string; email: string }[]>([])
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,49 +72,102 @@ export default function CreateProject() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="duration">Expected Duration</Label>
-                <Select>
-                  <SelectTrigger id="duration">
-                    <SelectValue placeholder="Select duration" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1month">1 Month</SelectItem>
-                    <SelectItem value="2months">2 Months</SelectItem>
-                    <SelectItem value="3months">3 Months</SelectItem>
-                    <SelectItem value="4months">4 Months</SelectItem>
-                    <SelectItem value="5months">5 Months</SelectItem>
-                    <SelectItem value="6months">6 Months</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Label htmlFor="supervisor">Supervisor</Label>
+              <Input id="supervisor" placeholder="Name of your project supervisor" required />
+            </div>
+              
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="team">Team Members</Label>
-              <Textarea
-                id="team"
-                placeholder="List the names and email addresses of your team members, one per line"
-                className="min-h-24"
+              <div>
+                <Input
+                  id="teamMemberName"
+                  placeholder="Enter team member name"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const name = e.currentTarget.value.trim()
+                      if (name) {
+                        setTeamMembers([...teamMembers, { name, enrollment: '', email: '' }])
+                        e.currentTarget.value = ''
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {teamMembers.map((member, index) => (
+                  <div key={index} className="bg-accent text-accent-foreground px-2 py-1 rounded-md text-sm flex flex-col items-start">
+                    <span>Name: {member.name}</span>
+                    <Input
+                      placeholder="Enter enrollment number"
+                      value={member.enrollment}
+                      onChange={(e) => {
+                        const updatedMembers = [...teamMembers]
+                        updatedMembers[index].enrollment = e.target.value
+                        setTeamMembers(updatedMembers)
+                      }}
+                      className="mt-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setTeamMembers(teamMembers.filter((_, i) => i !== index))}
+                      className="mt-2 text-accent-foreground/50 hover:text-primary-foreground"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="projectLink">Project Link (Optional)</Label>
+              <Input
+                id="projectLink"
+                placeholder="Enter a link to the project (e.g., GitHub, live demo)"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supervisor">Supervisor</Label>
-              <Input id="supervisor" placeholder="Name of your project supervisor" required />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="technologies">Technologies Used</Label>
-              <Input id="technologies" placeholder="e.g., React, Node.js, TensorFlow, Arduino" required />
+              <Input
+                id="technologies"
+                placeholder="Add a technology and press Enter"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    const value = e.currentTarget.value.trim()
+                    if (value && !technologies.includes(value)) {
+                      setTechnologies([...technologies, value])
+                      e.currentTarget.value = ''
+                    }
+                  }
+                }}
+              />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {technologies.map((tech, index) => (
+                <div key={index} className="bg-primary text-primary-foreground px-2 py-1 rounded-md text-sm flex items-center">
+                  {tech}
+                  <button
+                    type="button"
+                    onClick={() => setTechnologies(technologies.filter((_, i) => i !== index))}
+                    className="ml-2 text-primary-foreground/50 hover:text-primary-foreground"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
           </CardContent>
           <CardFooter className="flex justify-between border-t p-6">
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-purple hover:bg-purple-dark" disabled={isLoading}>
+            <Button type="submit" className="bg-accent text-accent-foreground hover:bg-accent-foreground/50 hover:text-accent" disabled={isLoading}>
               {isLoading ? "Creating..." : "Create Project"}
             </Button>
           </CardFooter>

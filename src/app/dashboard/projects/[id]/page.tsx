@@ -55,7 +55,7 @@ export default function ProjectDetail() {
       case "Not Started":
         return "bg-gray-500";
       default:
-        return "bg-purple";
+        return "bg-accent";
     }
   };
 

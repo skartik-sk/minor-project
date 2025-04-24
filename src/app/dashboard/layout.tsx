@@ -34,6 +34,7 @@ export default function DashboardLayout({
   ]
 
   return (
+    <>
     <SidebarProvider>
       <div className="flex h-screen bg-background">
         {/* Mobile sidebar toggle */}
@@ -48,8 +49,8 @@ export default function DashboardLayout({
         <div
           className={`fixed inset-0 z-30 transform bg-background transition duration-200 ease-in-out lg:hidden ${
             mobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
+            }`}
+            >
           <div className="flex h-16 items-center justify-between border-b px-4">
             <span className="text-xl font-semibold">Minor Projects</span>
             <Button variant="ghost" size="icon" onClick={() => setMobileOpen(false)}>
@@ -60,13 +61,13 @@ export default function DashboardLayout({
             <nav className="space-y-1">
               {navigation.map((item) => (
                 <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${
-                    pathname === item.href ? "bg-purple text-white" : "text-foreground hover:bg-secondary"
+                key={item.name}
+                href={item.href}
+                className={`flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                  pathname === item.href ? "bg-accent text-white" : "text-foreground hover:bg-secondary"
                   }`}
                   onClick={() => setMobileOpen(false)}
-                >
+                  >
                   <item.icon className="mr-3 h-5 w-5" />
                   {item.name}
                 </Link>
@@ -108,14 +109,15 @@ export default function DashboardLayout({
           </SidebarFooter>
         </Sidebar>
 
+      </div>
         {/* Main content */}
         <div className="flex flex-1 flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto pt-16 lg:pt-0">
-            <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+            <div className="mx-auto  px-4 py-6 sm:px-6 lg:px-8">{children}</div>
           </main>
         </div>
-      </div>
     </SidebarProvider>
+              </>
   )
 }
 

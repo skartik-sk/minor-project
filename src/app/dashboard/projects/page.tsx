@@ -112,7 +112,7 @@ export default function ProjectsList() {
       case "In Review":
         return "bg-yellow-500"
       case "Approved":
-        return "bg-purple"
+        return "bg-accent text-accent-foreground"
       default:
         return "bg-gray-500"
     }
@@ -244,7 +244,7 @@ export default function ProjectsList() {
                         <p className="mt-1">{project.supervisor}</p>
                       </div>
 
-                      <Button className="w-full bg-purple hover:bg-purple-dark" asChild>
+                      <Button className="w-full bg-accent hover:bg-accent-dark" asChild>
                         <Link href={`/dashboard/projects/${project.id}`}>View Full Details</Link>
                       </Button>
                     </div>

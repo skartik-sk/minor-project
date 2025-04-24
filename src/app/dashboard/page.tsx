@@ -45,7 +45,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Your Projects</h1>
-        <Button asChild className="bg-purple hover:bg-purple-dark">
+        <Button asChild className="bg-accent text-accent-foreground hover:bg-accent-dark">
           <Link href="/dashboard/create">
             <PlusCircle className="mr-2 h-4 w-4" />
             New Project
@@ -66,7 +66,7 @@ export default function Dashboard() {
                         ? "bg-blue-500"
                         : project.status === "In Review"
                           ? "bg-yellow-500"
-                          : "bg-purple"
+                          : "bg-accent text-accent-foreground"
                   }`}
                 >
                   {project.status}

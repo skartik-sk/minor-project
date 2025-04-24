@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       case "In Review":
         return "bg-yellow-500"
       case "Approved":
-        return "bg-purple"
+        return "bg-accent"
       default:
         return "bg-gray-500"
     }
@@ -333,7 +333,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button className="flex-1 bg-purple hover:bg-purple-dark">Approve</Button>
+                        <Button className="flex-1 bg-accent hover:bg-accent-dark">Approve</Button>
                         <Button className="flex-1" variant="outline">
                           Review
                         </Button>
