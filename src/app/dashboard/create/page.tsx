@@ -31,6 +31,8 @@ export default function CreateProject() {
       const categoryElement = form.querySelector("#category") as HTMLSelectElement;
       const supervisorInput = form.querySelector("#supervisor") as HTMLInputElement;
       const projectLinkInput = form.querySelector("#projectLink") as HTMLInputElement;
+      const typeElement = form.querySelector("#type") as HTMLSelectElement;
+      const year = new Date().getFullYear().toString();
 
       const projectData = {
         title: titleInput.value,
@@ -40,6 +42,8 @@ export default function CreateProject() {
         teamMembers,
         technologies,
         projectLink: projectLinkInput.value || null,
+        type: typeElement.value,
+        year,
         createdAt: new Date().toISOString(),
       };
 
@@ -100,6 +104,19 @@ export default function CreateProject() {
               <Input id="supervisor" placeholder="Name of your project supervisor" required />
             </div>
               
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="type">Project Type</Label>
+              <Select>
+                <SelectTrigger id="type">
+                  <SelectValue placeholder="Select project type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minor">Minor</SelectItem>
+                  <SelectItem value="major">Major</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

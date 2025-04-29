@@ -1,97 +1,48 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter } from "lucide-react"
+import { db } from "@/lib/utils"
+import { collection, getDocs } from "firebase/firestore"
 
-// Sample project data
-const allProjects = [
-  {
-    id: 1,
-    title: "AI-Powered Attendance System",
-    description: "A facial recognition system for automated attendance tracking in classrooms",
-    status: "In Progress",
-    date: "Apr 2, 2024",
-    supervisor: "Dr. Smith",
-    category: "AI & Machine Learning",
-  },
-  {
-    id: 2,
-    title: "Smart Irrigation Controller",
-    description: "IoT-based system for efficient water management in agriculture",
-    status: "Completed",
-    date: "Mar 15, 2024",
-    supervisor: "Prof. Johnson",
-    category: "Hardware & IoT",
-  },
-  {
-    id: 3,
-    title: "AR Campus Tour Guide",
-    description: "Augmented reality application for interactive campus tours",
-    status: "In Review",
-    date: "Apr 1, 2024",
-    supervisor: "Dr. Williams",
-    category: "Mobile App Development",
-  },
-  {
-    id: 4,
-    title: "Blockchain-based Certificate Verification",
-    description: "Secure system for verifying academic certificates using blockchain",
-    status: "Approved",
-    date: "Mar 28, 2024",
-    supervisor: "Prof. Davis",
-    category: "Web Development",
-  },
-  {
-    id: 5,
-    title: "Smart Parking System",
-    description: "IoT-based system for efficient parking management on campus",
-    status: "In Progress",
-    date: "Mar 20, 2024",
-    supervisor: "Dr. Brown",
-    category: "Hardware & IoT",
-  },
-  {
-    id: 6,
-    title: "Virtual Lab Simulator",
-    description: "VR-based simulator for conducting virtual lab experiments",
-    status: "Completed",
-    date: "Feb 15, 2024",
-    supervisor: "Prof. Wilson",
-    category: "Software Development",
-  },
-  {
-    id: 7,
-    title: "Student Mental Health App",
-    description: "Mobile app for monitoring and improving student mental health",
-    status: "In Review",
-    date: "Mar 25, 2024",
-    supervisor: "Dr. Taylor",
-    category: "Mobile App Development",
-  },
-  {
-    id: 8,
-    title: "Automated Essay Grading System",
-    description: "NLP-based system for automated grading of student essays",
-    status: "Approved",
-    date: "Mar 10, 2024",
-    supervisor: "Prof. Anderson",
-    category: "AI & Machine Learning",
-  },
-]
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  supervisor: string;
+  status: string;
+  category: string;
+  date: string;
+  team: string[];
+}
 
 export default function ProjectsList() {
+  const [projects, setProjects] = useState<Project[]>([]); // Properly typed state
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [selectedProject, setSelectedProject] = useState<number | null>(null)
+  const [selectedProject, setSelectedProject] = useState<string | null>(null)
 
-  // Filter projects based on search term and filters
-  const filteredProjects = allProjects.filter((project) => {
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "projects"))
+        const fetchedProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[]
+        setProjects(fetchedProjects)
+      } catch (error) {
+        console.error("Error fetching projects:", error)
+      }
+    }
+
+    fetchProjects()
+  }, [])
+
+  const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -213,7 +164,7 @@ export default function ProjectsList() {
               </div>
               <div className="p-4">
                 {(() => {
-                  const project = allProjects.find((p) => p.id === selectedProject)
+                  const project = projects.find((p) => p.id === selectedProject)
                   if (!project) return null
 
                   return (

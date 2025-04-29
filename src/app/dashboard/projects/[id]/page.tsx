@@ -1,50 +1,69 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Calendar, Users, BookOpen, FileText, MessageSquare } from "lucide-react";
 
-// Sample project data
-const project = {
-  id: 1,
-  title: "AI-Powered Attendance System",
-  description:
-    "A facial recognition system for automated attendance tracking in classrooms. The system uses computer vision and machine learning algorithms to identify students and mark their attendance automatically. This eliminates the need for manual attendance taking and reduces administrative overhead.",
-  status: "In Progress",
-  startDate: "Feb 15, 2024",
-  endDate: "May 15, 2024",
-  supervisor: "Dr. Smith",
-  category: "AI & Machine Learning",
-  team: [
-    { name: "John Doe", email: "john.doe@university.edu", role: "Team Lead" },
-    { name: "Jane Smith", email: "jane.smith@university.edu", role: "ML Engineer" },
-    { name: "Mike Johnson", email: "mike.johnson@university.edu", role: "Frontend Developer" },
-    { name: "Sarah Williams", email: "sarah.williams@university.edu", role: "Backend Developer" },
-  ],
-  technologies: ["Python", "TensorFlow", "OpenCV", "React", "Node.js", "MongoDB"],
-  milestones: [
-    { title: "Project Proposal", date: "Feb 15, 2024", status: "Completed" },
-    { title: "Design Document", date: "Mar 1, 2024", status: "Completed" },
-    { title: "Prototype Development", date: "Mar 30, 2024", status: "In Progress" },
-    { title: "Testing", date: "Apr 20, 2024", status: "Not Started" },
-    { title: "Final Presentation", date: "May 15, 2024", status: "Not Started" },
-  ],
-  updates: [
-    { date: "Mar 28, 2024", content: "Completed the facial recognition algorithm with 95% accuracy." },
-    { date: "Mar 15, 2024", content: "Finished the database schema design and API endpoints." },
-    { date: "Mar 5, 2024", content: "Started working on the frontend interface for the system." },
-    { date: "Feb 20, 2024", content: "Collected training data for the facial recognition model." },
-  ],
-};
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  duration: string;
+  category: string;
+  supervisor: string;
+  team: { name: string; email: string; role: string }[];
+  technologies: string[];
+  milestones: { title: string; date: string; status: string }[];
+  updates: { date: string; content: string }[];
+}
 
 export default function ProjectDetail() {
- // Ensure params are logged correctly
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { id } = useParams();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        if (!id || typeof id !== "string") {
+          throw new Error("Invalid project ID");
+        }
+
+        const docRef = doc(db, "projects", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProject({ id: docSnap.id, ...docSnap.data() } as Project);
+        } else {
+          console.error("No such project!");
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!project) {
+    return <div>Project not found</div>;
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -69,7 +88,7 @@ export default function ProjectDetail() {
         <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
@@ -107,7 +126,7 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Duration:</span>
-                    <span>3 months</span>
+                    <span>{project.duration}</span>
                   </div>
                 </div>
               </CardContent>
@@ -145,7 +164,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech) => (
+                {project.technologies.map((tech: string) => (
                   <Badge key={tech} variant="outline">
                     {tech}
                   </Badge>
