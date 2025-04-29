@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,6 +9,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, CheckCircle, Clock, AlertCircle, FileCheck } from "lucide-react"
+import { db, auth } from "@/lib/utils"
+import { collection, getDocs } from "firebase/firestore"
+import * as XLSX from "xlsx"
 
 // Sample project data
 const allProjects = [
@@ -94,12 +98,52 @@ const statistics = {
   approved: allProjects.filter((p) => p.status === "Approved").length,
 }
 
+const exportToExcel = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, "projects"));
+    const projects = querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        Name: data.title,
+        Status: data.status,
+        Members: data.team.map((member: string) => member).join(", "),
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(projects);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Projects");
+
+    XLSX.writeFile(workbook, "projects.xlsx");
+  } catch (error) {
+    console.error("Error exporting to Excel:", error);
+  }
+}
+
 export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [departmentFilter, setDepartmentFilter] = useState("all")
   const [selectedProject, setSelectedProject] = useState<number | null>(null)
   const [activeTab, setActiveTab] = useState("all")
+  const router = useRouter()
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const token = await user.getIdTokenResult();
+      if (!token.claims.admin) {
+        router.push("/dashboard");
+      }
+    };
+
+    checkAdmin();
+  }, []);
 
   // Filter projects based on search term, filters, and active tab
   const filteredProjects = allProjects.filter((project) => {
@@ -349,6 +393,12 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button onClick={exportToExcel} className="bg-accent hover:bg-accent-dark">
+          Export to Excel
+        </Button>
       </div>
     </div>
   )

@@ -5,6 +5,8 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
+import { auth, googleProvider } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,15 +18,27 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider)
+      router.push("/dashboard")
+    } catch (error) {
+      console.error("Google login failed:", error)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
       router.push("/dashboard")
-    }, 1000)
+    } catch (error) {
+      console.error("Login failed:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -66,6 +80,14 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col space-y-10">
             <Button type="submit" className="w-full bg-accent mt-5  text-accent-foreground hover:bg-accent-dark" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
+            </Button>
+            <Button
+              type="button"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary-dark"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login with Google"}
             </Button>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}

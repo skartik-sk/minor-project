@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
+import { db } from "@/lib/utils"
+import { collection, addDoc } from "firebase/firestore"
 
 export default function CreateProject() {
   const [isLoading, setIsLoading] = useState(false)
@@ -18,16 +20,37 @@ export default function CreateProject() {
   const [teamMembers, setTeamMembers] = useState<{ name: string; enrollment: string; email: string }[]>([])
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1000)
-  }
+    try {
+      const form = e.currentTarget;
+      const titleInput = form.querySelector("#title") as HTMLInputElement;
+      const descriptionInput = form.querySelector("#description") as HTMLTextAreaElement;
+      const categoryElement = form.querySelector("#category") as HTMLSelectElement;
+      const supervisorInput = form.querySelector("#supervisor") as HTMLInputElement;
+      const projectLinkInput = form.querySelector("#projectLink") as HTMLInputElement;
+
+      const projectData = {
+        title: titleInput.value,
+        description: descriptionInput.value,
+        category: categoryElement.value,
+        supervisor: supervisorInput.value,
+        teamMembers,
+        technologies,
+        projectLink: projectLinkInput.value || null,
+        createdAt: new Date().toISOString(),
+      };
+
+      await addDoc(collection(db, "projects"), projectData);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Error creating project:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-3xl">

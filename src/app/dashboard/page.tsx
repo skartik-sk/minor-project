@@ -3,44 +3,48 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PlusCircle, ArrowRight } from "lucide-react"
+import { db } from "@/lib/utils"
+import { collection, query, where, getDocs } from "firebase/firestore"
+import { useEffect, useState } from "react"
+import { auth } from "@/lib/utils" // Corrected import for auth
 
-// Sample project data
-const projects = [
-  {
-    id: 1,
-    title: "AI-Powered Attendance System",
-    description: "A facial recognition system for automated attendance tracking in classrooms",
-    status: "In Progress",
-    date: "Apr 2, 2024",
-    members: 4,
-  },
-  {
-    id: 2,
-    title: "Smart Irrigation Controller",
-    description: "IoT-based system for efficient water management in agriculture",
-    status: "Completed",
-    date: "Mar 15, 2024",
-    members: 3,
-  },
-  {
-    id: 3,
-    title: "AR Campus Tour Guide",
-    description: "Augmented reality application for interactive campus tours",
-    status: "In Review",
-    date: "Apr 1, 2024",
-    members: 5,
-  },
-  {
-    id: 4,
-    title: "Blockchain-based Certificate Verification",
-    description: "Secure system for verifying academic certificates using blockchain",
-    status: "Approved",
-    date: "Mar 28, 2024",
-    members: 2,
-  },
-]
+interface Project {
+  id: string;
+  status: string;
+  title: string;
+  description: string;
+  date: string;
+  members: { name: string }[];
+}
 
 export default function Dashboard() {
+  const [projects, setProjects] = useState<Project[]>([]); // Properly typed state
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const q = query(collection(db, "projects"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        const userProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[];
+        setProjects(userProjects);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,10 +67,10 @@ export default function Dashboard() {
                     project.status === "Completed"
                       ? "bg-green-500"
                       : project.status === "In Progress"
-                        ? "bg-blue-500"
-                        : project.status === "In Review"
-                          ? "bg-yellow-500"
-                          : "bg-accent text-accent-foreground"
+                      ? "bg-blue-500"
+                      : project.status === "In Review"
+                      ? "bg-yellow-500"
+                      : "bg-accent text-accent-foreground"
                   }`}
                 >
                   {project.status}
@@ -77,7 +81,7 @@ export default function Dashboard() {
               <CardDescription className="line-clamp-2">{project.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">{project.members} team members</div>
+              <div className="text-sm text-muted-foreground">{project.members.length} team members</div>
             </CardContent>
             <CardFooter className="border-t bg-muted/50 px-6 py-3">
               <Button asChild variant="ghost" className="ml-auto flex items-center gap-1 p-0">

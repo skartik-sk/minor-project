@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { auth, googleProvider, db } from "@/lib/utils";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -18,16 +21,39 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleGoogleSignup = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      await setDoc(doc(db, "users", user.uid), {
+        name: user.displayName,
+        email: user.email,
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Google signup failed:", error);
+    }
+  };
 
-    // Simulate signup
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1000)
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        enrollment,
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Signup failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -77,6 +103,9 @@ export default function SignupPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full bg-accent mt-5  text-accent-foreground hover:bg-accent-dark" disabled={isLoading}>
               {isLoading ? "Creating account..." : "Create account"}
+            </Button>
+            <Button type="button" className="w-full bg-primary text-primary-foreground hover:bg-primary-dark" onClick={handleGoogleSignup} disabled={isLoading}>
+              {isLoading ? "Signing in with Google..." : "Sign up with Google"}
             </Button>
             <div className="text-center text-sm">
               Already have an account?{" "}
