@@ -151,7 +151,7 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Team Size:</span>
-                    <span>{project.team.length} members</span>
+                    <span>{project.team?.length} members</span>
                   </div>
                 </div>
               </CardContent>
@@ -164,7 +164,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {project.technologies.map((tech: string) => (
+                {project.technologies?.map((tech: string) => (
                   <Badge key={tech} variant="outline">
                     {tech}
                   </Badge>
@@ -181,11 +181,11 @@ export default function ProjectDetail() {
                 <Users className="h-5 w-5" />
                 Team Members
               </CardTitle>
-              <CardDescription>{project.team.length} members working on this project</CardDescription>
+              <CardDescription>{project.team?.length} members working on this project</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="divide-y">
-                {project.team.map((member, index) => (
+                {project.team?.map((member, index) => (
                   <div key={index} className="py-4 first:pt-0 last:pb-0">
                     <div className="font-medium">{member.name}</div>
                     <div className="mt-1 text-sm text-muted-foreground">{member.email}</div>
@@ -210,7 +210,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {project.milestones.map((milestone, index) => (
+                {project.milestones?.map((milestone, index) => (
                   <div key={index} className="flex items-start gap-4">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
                       {index + 1}
@@ -240,7 +240,7 @@ export default function ProjectDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {project.updates.map((update, index) => (
+                {project.updates?.map((update, index) => (
                   <div key={index} className="border-l-2 border-muted pl-4">
                     <div className="text-sm font-medium">{update.date}</div>
                     <p className="mt-1">{update.content}</p>

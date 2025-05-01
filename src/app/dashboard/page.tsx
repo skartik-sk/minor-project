@@ -1,4 +1,3 @@
-
 "use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -9,6 +8,7 @@ import { db } from "@/lib/utils"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { auth } from "@/lib/utils" // Corrected import for auth
+import { onAuthStateChanged } from "firebase/auth";
 
 interface Project {
   id: string;
@@ -24,23 +24,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const q = query(collection(db, "projects"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-        const userProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[];
-        setProjects(userProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      } finally {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const q = query(collection(db, "projects"), where("userId", "==", user.uid));
+          const querySnapshot = await getDocs(q);
+          const userProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[];
+          setProjects(userProjects);
+        } catch (error) {
+          console.error("Error fetching projects:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
         setLoading(false);
       }
-    };
+    });
 
-    fetchProjects();
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
@@ -83,7 +84,7 @@ export default function Dashboard() {
               <CardDescription className="line-clamp-2">{project.description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground">{project.members.length} team members</div>
+              <div className="text-sm text-muted-foreground">{project.members?.length || 0} team members</div>
             </CardContent>
             <CardFooter className="border-t bg-muted/50 px-6 py-3">
               <Button asChild variant="ghost" className="ml-auto flex items-center gap-1 p-0">

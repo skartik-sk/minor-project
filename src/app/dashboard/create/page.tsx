@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from "lucide-react"
-import { db } from "@/lib/utils"
+import { db, auth } from "@/lib/utils"
 import { collection, addDoc } from "firebase/firestore"
 
 export default function CreateProject() {
@@ -25,6 +25,12 @@ export default function CreateProject() {
     setIsLoading(true);
 
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("User not logged in");
+        return;
+      }
+
       const form = e.currentTarget;
       const titleInput = form.querySelector("#title") as HTMLInputElement;
       const descriptionInput = form.querySelector("#description") as HTMLTextAreaElement;
@@ -44,6 +50,7 @@ export default function CreateProject() {
         projectLink: projectLinkInput.value || null,
         type: typeElement.value,
         year,
+        userId: user.uid,
         createdAt: new Date().toISOString(),
       };
 
