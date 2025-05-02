@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+// import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { db, auth } from "@/lib/utils"
+import { db } from "@/lib/utils"
 import { collection, getDocs } from "firebase/firestore"
 import * as XLSX from "xlsx"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertCircle } from "lucide-react";
 
 interface Project {
   id: string;
@@ -20,18 +21,22 @@ interface Project {
 export default function AdminDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [yearFilter, setYearFilter] = useState("2025"); // Default to current year
   const [typeFilter, setTypeFilter] = useState("all");
-  const router = useRouter();
+  // const router = useRouter();
 
   useEffect(() => {
     const fetchProjects = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const querySnapshot = await getDocs(collection(db, "projects"));
         const fetchedProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[];
         setProjects(fetchedProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
+        setError("Failed to fetch projects. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -59,6 +64,17 @@ export default function AdminDashboard() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Projects");
     XLSX.writeFile(workbook, "projects.xlsx");
   };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
+          <p className="text-lg font-semibold text-red-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div>Loading...</div>;

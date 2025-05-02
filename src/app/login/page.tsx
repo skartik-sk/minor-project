@@ -17,7 +17,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  process.env.NEXT_PUBLIC_APIKEY
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider)
