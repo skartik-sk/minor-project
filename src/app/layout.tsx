@@ -10,11 +10,6 @@ import { useEffect, useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] })
 
-const metadata: Metadata = {
-  title: "University Minor Projects",
-  description: "Platform for university minor projects",
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{

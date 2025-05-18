@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   onAuthStateChanged,
-} from "firebase/auth"
-import { auth, googleProvider, db } from "@/lib/utils"
-import { doc, setDoc } from "firebase/firestore"
+} from "firebase/auth";
+import { auth, googleProvider, db } from "@/lib/utils";
+import { doc, setDoc } from "firebase/firestore";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -22,97 +22,104 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import toast from "react-hot-toast"
-import SessionLoading from "@/components/session-checking"
-
+} from "@/components/ui/card";
+import toast from "react-hot-toast";
+import SessionLoading from "@/components/session-checking";
+import { FirebaseError } from "firebase/app";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "signup">("login")
-  const [checkingAuth, setCheckingAuth] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [enrollment, setEnrollment] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [enrollment, setEnrollment] = useState("");
 
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) router.push("/dashboard")
-      else setCheckingAuth(false)
-    })
-    return () => unsub()
-  }, [router])
+      if (user) router.push("/dashboard");
+      else setCheckingAuth(false);
+    });
+    return () => unsub();
+  }, [router]);
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password)
-      router.push("/dashboard")
-    } catch (error: any) {
-      const code = error.code || "auth/unknown"
-      const shortCode = code.replace("auth/", "")
-      const formattedMessage = shortCode.replaceAll("-", " ").replace(/^./, (str:String) => str.toUpperCase())
-      toast.error(formattedMessage)
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/dashboard");
+    } catch (error) {
+      const code = (error as FirebaseError).code || "auth/unknown";
+      const shortCode = code.replace("auth/", "");
+      const formattedMessage = shortCode
+        .replaceAll("-", " ")
+        .replace(/^./, (str: string) => str.toUpperCase());
+      toast.error(formattedMessage);
     }
-  }
-  
+  };
+
   const handleSignup = async () => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      const user = userCredential.user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
       await setDoc(doc(db, "users", user.uid), {
         name,
         email,
         enrollment,
-      })
-      router.push("/dashboard")
-    } catch (error: any) {
-      const code = error.code || "auth/unknown"
-      const shortCode = code.replace("auth/", "")
-      const formattedMessage = shortCode.replaceAll("-", " ").replace(/^./, (str:String) => str.toUpperCase())
-      toast.error(formattedMessage)
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      const code = (error as FirebaseError).code || "auth/unknown";
+      const shortCode = code.replace("auth/", "");
+      const formattedMessage = shortCode
+        .replaceAll("-", " ")
+        .replace(/^./, (str: string) => str.toUpperCase());
+      toast.error(formattedMessage);
     }
-  }
+  };
 
   const handleGoogleAuth = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const user = result.user
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
-      })
-      router.push("/dashboard")
+      });
+      router.push("/dashboard");
     } catch (error) {
-      toast.error("Google authentication failed")
-      console.error(`${mode} with Google failed:`, error)
+      toast.error("Google authentication failed");
+      console.error(`${mode} with Google failed:`, error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
     try {
       if (mode === "login") {
-        await handleLogin()
+        await handleLogin();
       } else {
-        await handleSignup()
+        await handleSignup();
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (checkingAuth) {
-    return <SessionLoading/>
+    return <SessionLoading />;
   }
-
   return (
     <div className="flex min-h-full items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -168,7 +175,10 @@ export default function AuthPage() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 {mode === "login" && (
-                  <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-primary hover:underline"
+                  >
                     Forgot?
                   </Link>
                 )}
@@ -233,5 +243,5 @@ export default function AuthPage() {
         </form>
       </Card>
     </div>
-  )
+  );
 }

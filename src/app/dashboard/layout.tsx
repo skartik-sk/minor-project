@@ -1,9 +1,5 @@
 "use client"
-import type React from "react"
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, PlusCircle, List, Settings, LogOut, Menu, X } from "lucide-react"
+import SessionLoading from "@/components/session-checking"
 import { Button } from "@/components/ui/button"
 import {
   Sidebar,
@@ -11,16 +7,17 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { auth } from "@/lib/utils"
-import { onAuthStateChanged } from "firebase/auth"
-import { useRouter } from "next/navigation"
-import SessionLoading from "@/components/session-checking"
-import { signOut } from "firebase/auth"
-import { ModeToggle } from "@/components/toggle-theme"
+import { onAuthStateChanged, signOut } from "firebase/auth"
+import { Home, List, LogOut, Menu, PlusCircle, Settings, X } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
+import type React from "react"
+import { useEffect, useState } from "react"
 
 export default function DashboardLayout({
   children,
