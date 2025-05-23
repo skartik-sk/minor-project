@@ -26,6 +26,11 @@ export default function AdminDashboard() {
   const [typeFilter, setTypeFilter] = useState("all");
   // const router = useRouter();
 
+  // Helper function to display N/A for empty or null values
+  const displayValue = (value: string | undefined | null, fallback: string = "N/A") => {
+    return value || fallback;
+  };
+
   useEffect(() => {
     const fetchProjects = async () => {
       setLoading(true);
@@ -53,10 +58,11 @@ export default function AdminDashboard() {
 
   const exportToExcel = () => {
     const formattedProjects = filteredProjects.map((project) => ({
-      Name: project.title || "N/A",
-      Status: project.status || "N/A",
-      Type: project.type || "N/A",
-      Members: project.team ? project.team.join(", ") : "No members",
+      Name: displayValue(project.title),
+      Status: displayValue(project.status),
+      Type: displayValue(project.type, "Not Specified"),
+      Year: displayValue(project.year, "N/A"),
+      Members: project.team && project.team.length > 0 ? project.team.join(", ") : "No members",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(formattedProjects);
@@ -116,15 +122,21 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProjects.map((project) => (
-          <div key={project.id} className="p-4 border rounded-md">
-            <h2 className="text-xl font-semibold">{project.title}</h2>
-            <p>Status: {project.status}</p>
-            <p>Type: {project.type}</p>
-            <p>Year: {project.year}</p>
-            <p>Members: {project.team ? project.team.join(", ") : "No members"}</p>
-          </div>
-        ))}
+        {filteredProjects.length > 0 ? (
+          filteredProjects.map((project) => (
+            <div key={project.id} className="p-4 border rounded-md">
+              <h2 className="text-xl font-semibold">{displayValue(project.title)}</h2>
+              <p>Status: {displayValue(project.status)}</p>
+              <p>Type: {displayValue(project.type, "Not Specified")}</p>
+              <p>Year: {displayValue(project.year)}</p>
+              <p>Members: {project.team && project.team.length > 0 ? project.team.join(", ") : "No members"}</p>
+            </div>
+          ))
+        ) : (
+          <p className="col-span-full text-center text-muted-foreground">
+            No projects found for the selected filters.
+          </p>
+        )}
       </div>
     </div>
   );

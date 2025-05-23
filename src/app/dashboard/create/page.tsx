@@ -18,37 +18,54 @@ export default function CreateProject() {
   const [isLoading, setIsLoading] = useState(false)
   const [technologies, setTechnologies] = useState<string[]>([])
   const [teamMembers, setTeamMembers] = useState<{ name: string; enrollment: string; email: string }[]>([])
+  const [category, setCategory] = useState<string>("");
+  const [projectType, setProjectType] = useState<string>("");
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
+    if (!category) {
+      console.error("Category is required");
+      // Optionally, show a user-friendly error message here
+      setIsLoading(false);
+      return;
+    }
+
+    if (!projectType) {
+      console.error("Project type is required");
+      // Optionally, show a user-friendly error message here
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const user = auth.currentUser;
       if (!user) {
         console.error("User not logged in");
+        setIsLoading(false); // Stop loading if user not logged in
         return;
       }
 
       const form = e.currentTarget;
       const titleInput = form.querySelector("#title") as HTMLInputElement;
       const descriptionInput = form.querySelector("#description") as HTMLTextAreaElement;
-      const categoryElement = form.querySelector("#category") as HTMLSelectElement;
+      // const categoryElement = form.querySelector("#category") as HTMLSelectElement; // Removed
       const supervisorInput = form.querySelector("#supervisor") as HTMLInputElement;
       const projectLinkInput = form.querySelector("#projectLink") as HTMLInputElement;
-      const typeElement = form.querySelector("#type") as HTMLSelectElement;
+      // const typeElement = form.querySelector("#type") as HTMLSelectElement; // Removed
       const year = new Date().getFullYear().toString();
 
       const projectData = {
         title: titleInput.value,
         description: descriptionInput.value,
-        category: categoryElement.value,
+        category: category, // Use state variable
         supervisor: supervisorInput.value,
         teamMembers,
         technologies,
         projectLink: projectLinkInput.value || null,
-        type: typeElement.value,
+        type: projectType, // Use state variable
         year,
         userId: user.uid,
         createdAt: new Date().toISOString(),
@@ -92,7 +109,7 @@ export default function CreateProject() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
-                <Select>
+                <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger id="category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
@@ -115,7 +132,7 @@ export default function CreateProject() {
 
             <div className="space-y-2">
               <Label htmlFor="type">Project Type</Label>
-              <Select>
+              <Select value={projectType} onValueChange={setProjectType}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Select project type" />
                 </SelectTrigger>

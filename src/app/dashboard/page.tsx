@@ -17,7 +17,7 @@ interface Project {
   title: string;
   description: string;
   date: string;
-  members: { name: string }[];
+  teamMembers: { name: string }[];
 }
 
 export default function Dashboard() {
@@ -94,7 +94,7 @@ export default function Dashboard() {
           </CardHeader>
         
           <CardContent className="p-0 mt-2 text-sm text-muted-foreground">
-            {project.members?.length || 0} team members
+            {project.teamMembers?.length || 0} team members
           </CardContent>
         
           <CardFooter className="p-0 mt-4">

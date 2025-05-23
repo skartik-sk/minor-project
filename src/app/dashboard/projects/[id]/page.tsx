@@ -20,7 +20,7 @@ interface Project {
   duration: string;
   category: string;
   supervisor: string;
-  team: { name: string; email: string; role: string }[];
+  teamMembers: { name: string; email: string; enrollment: string }[];
   technologies: string[];
   milestones: { title: string; date: string; status: string }[];
   updates: { date: string; content: string }[];
@@ -31,6 +31,12 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview"); // State for active tab
+
+  // Helper function to display N/A for empty or null values
+  const displayValue = (value: string | undefined | null, suffix: string = "") => {
+    return value ? `${value}${suffix}` : "N/A";
+  };
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -43,6 +49,7 @@ export default function ProjectDetail() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
+          console.log(docSnap.data())
           setProject({ id: docSnap.id, ...docSnap.data() } as Project);
         } else {
           console.error("No such project!");
@@ -84,16 +91,16 @@ export default function ProjectDetail() {
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-3xl font-bold">{project.title}</h1>
-        <Badge className={getStatusColor(project.status)}>{project.status}</Badge>
+        <h1 className="text-3xl font-bold">{displayValue(project.title)}</h1>
+        {project.status && <Badge className={getStatusColor(project.status)}>{project.status}</Badge>}
       </div>
 
-      <Tabs value="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones</TabsTrigger>
-          <TabsTrigger value="updates">Updates</TabsTrigger>
+          {/* <TabsTrigger value="milestones">Milestones</TabsTrigger> */}
+          {/* <TabsTrigger value="updates">Updates</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 space-y-6">
@@ -102,12 +109,12 @@ export default function ProjectDetail() {
               <CardTitle>Project Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>{project.description}</p>
+              <p>{displayValue(project.description)}</p>
             </CardContent>
           </Card>
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card>
+            {/* <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
@@ -118,19 +125,19 @@ export default function ProjectDetail() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Start Date:</span>
-                    <span>{project.startDate}</span>
+                    <span>{displayValue(project.startDate)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">End Date:</span>
-                    <span>{project.endDate}</span>
+                    <span>{displayValue(project.endDate)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Duration:</span>
-                    <span>{project.duration}</span>
+                    <span>{displayValue(project.duration)}</span>
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader className="pb-2">
@@ -143,15 +150,15 @@ export default function ProjectDetail() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Category:</span>
-                    <span>{project.category}</span>
+                    <span>{displayValue(project.category)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Supervisor:</span>
-                    <span>{project.supervisor}</span>
+                    <span>{displayValue(project.supervisor)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Team Size:</span>
-                    <span>{project.team?.length} members</span>
+                    <span>{project.teamMembers?.length || 0} members</span>
                   </div>
                 </div>
               </CardContent>
@@ -163,13 +170,17 @@ export default function ProjectDetail() {
               <CardTitle>Technologies Used</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {project.technologies?.map((tech: string) => (
-                  <Badge key={tech} variant="outline">
-                    {tech}
-                  </Badge>
-                ))}
-              </div>
+              {project.technologies && project.technologies.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {project.technologies.map((tech: string) => (
+                    <Badge key={tech} variant="outline">
+                      {displayValue(tech)}
+                    </Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No technologies listed.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -181,20 +192,24 @@ export default function ProjectDetail() {
                 <Users className="h-5 w-5" />
                 Team Members
               </CardTitle>
-              <CardDescription>{project.team?.length} members working on this project</CardDescription>
+              <CardDescription>{project.teamMembers?.length || 0} members working on this project</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="divide-y">
-                {project.team?.map((member, index) => (
-                  <div key={index} className="py-4 first:pt-0 last:pb-0">
-                    <div className="font-medium">{member.name}</div>
-                    <div className="mt-1 text-sm text-muted-foreground">{member.email}</div>
-                    <div className="mt-1">
-                      <Badge variant="outline">{member.role}</Badge>
+              {project.teamMembers && project.teamMembers.length > 0 ? (
+                <div className="divide-y">
+                  {project.teamMembers.map((member, index) => (
+                    <div key={index} className="py-4 first:pt-0 last:pb-0">
+                      <div className="font-medium">{displayValue(member.name)}</div>
+
+                      <div className="mt-1">
+                        <Badge variant="outline">{displayValue(member.enrollment)}</Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No team members assigned.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -209,22 +224,26 @@ export default function ProjectDetail() {
               <CardDescription>Track the progress of project milestones</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {project.milestones?.map((milestone, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-medium">{milestone.title}</h3>
-                        <Badge className={getStatusColor(milestone.status)}>{milestone.status}</Badge>
+              {project.milestones && project.milestones.length > 0 ? (
+                <div className="space-y-6">
+                  {project.milestones.map((milestone, index) => (
+                    <div key={index} className="flex items-start gap-4">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
+                        {index + 1}
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">Due: {milestone.date}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium">{displayValue(milestone.title)}</h3>
+                          {milestone.status && <Badge className={getStatusColor(milestone.status)}>{milestone.status}</Badge>}
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground">Due: {displayValue(milestone.date)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No milestones defined.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -239,14 +258,18 @@ export default function ProjectDetail() {
               <CardDescription>Recent updates and progress reports</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                {project.updates?.map((update, index) => (
-                  <div key={index} className="border-l-2 border-muted pl-4">
-                    <div className="text-sm font-medium">{update.date}</div>
-                    <p className="mt-1">{update.content}</p>
-                  </div>
-                ))}
-              </div>
+              {project.updates && project.updates.length > 0 ? (
+                <div className="space-y-6">
+                  {project.updates.map((update, index) => (
+                    <div key={index} className="border-l-2 border-muted pl-4">
+                      <div className="text-sm font-medium">{displayValue(update.date)}</div>
+                      <p className="mt-1">{displayValue(update.content)}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No updates available.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -96,8 +96,18 @@ export default function AuthPage() {
       });
       router.push("/dashboard");
     } catch (error) {
-      toast.error("Google authentication failed");
-      console.error(`${mode} with Google failed:`, error);
+      console.error(`${mode} with Google failed:`, error); // Log the full error for debugging
+      let errorMessage = "Google authentication failed. Please try again.";
+      if (error instanceof FirebaseError) {
+        const shortCode = error.code.replace("auth/", "");
+        errorMessage = shortCode
+          .replaceAll("-", " ")
+          .replace(/^./, (str: string) => str.toUpperCase());
+      } else if (error instanceof Error) {
+        // Fallback for other types of errors
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
