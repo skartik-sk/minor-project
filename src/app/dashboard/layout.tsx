@@ -32,9 +32,7 @@ export default function DashboardLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Create Project", href: "/dashboard/create", icon: PlusCircle },
-    { name: "All Projects", href: "/dashboard/projects", icon: List },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+    { name: "Create Project", href: "/dashboard/create", icon: PlusCircle }
   ]
 
   const handleSignOut = async () => {
@@ -125,7 +123,7 @@ export default function DashboardLayout({
             ))}
             <Button
               variant="ghost"
-              className="mt-4 w-full justify-start text-destructive hover:bg-destructive/10" // shadcn's destructive color for logout
+              className="mt-4 w-full justify-start text-destructive hover:bg-destructive" // shadcn's destructive color for logout
               onClick={handleSignOut}
             >
               <LogOut className="mr-3 h-5 w-5" />
@@ -134,47 +132,42 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-        {/* Desktop sidebar */}
-        <div className="hidden lg:flex">
-  <Sidebar>
-    <SidebarHeader className="p-4">
-      <h1 className="text-xl font-bold">Minor Projects</h1>
-    </SidebarHeader>
-    <SidebarContent>
-      <SidebarMenu>
-        {navigation.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild isActive={pathname === item.href}>
-              <Link href={item.href}>
-                <item.icon />
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-    </SidebarContent>
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={async () => {
-              try {
-                await signOut(auth);
-                router.push("/auth");
-              } catch (error) {
-                console.error("Sign-out error:", error);
-              }
-            }}
-          >
-            <LogOut />
-            <span>Logout</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarFooter>
-  </Sidebar>
-</div>
+   <div className="hidden lg:flex">
+      <Sidebar>
+        <SidebarHeader className="p-4">
+          <h1 className="text-xl font-bold">Minor Projects</h1>
+        </SidebarHeader>
+        <SidebarContent className="p-4">
+          <SidebarMenu>
+            {navigation.map((item) => (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton asChild isActive={pathname === item.href}>
+                  <Link href={item.href}>
+                    <item.icon className="mr-3 h-5 w-5" />
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarContent>
+        <SidebarFooter className="p-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              {/* Directly use the Button as the interactive element */}
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-destructive hover:bg-destructive/10"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Logout
+              </Button>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+    </div>
 
 
       </div>

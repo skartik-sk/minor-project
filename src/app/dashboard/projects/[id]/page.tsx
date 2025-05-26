@@ -6,24 +6,34 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardFooter, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Calendar, Users, BookOpen, FileText, MessageSquare } from "lucide-react";
+import { ArrowLeft, Calendar, Users, BookOpen, FileText, ArrowUpRight, Github, ArrowRight, Mail, Phone, Circle, UserRound } from "lucide-react";
+
+interface Member {
+  email: string;
+  enrollment: string;
+  name: string;
+  phone: string;
+}
 
 interface Project {
   id: string;
   title: string;
   description: string;
-  status: string;
-  startDate: string;
-  endDate: string;
-  duration: string;
+  date: string;
+  createdAt: string;
+  teamMembers: Member[];
+  batch: string;
   category: string;
+  deployedLink: string;
+  githubLink: string;
+  hardwareRequirements: string[];
+  softwareRequirements: string[];
   supervisor: string;
-  teamMembers: { name: string; email: string; enrollment: string }[];
   technologies: string[];
-  milestones: { title: string; date: string; status: string }[];
-  updates: { date: string; content: string }[];
+  type: string;
+  userId: string;
 }
 
 export default function ProjectDetail() {
@@ -31,9 +41,8 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview"); // State for active tab
+  const [activeTab, setActiveTab] = useState("overview");
 
-  // Helper function to display N/A for empty or null values
   const displayValue = (value: string | undefined | null, suffix: string = "") => {
     return value ? `${value}${suffix}` : "N/A";
   };
@@ -41,49 +50,22 @@ export default function ProjectDetail() {
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        if (!id || typeof id !== "string") {
-          throw new Error("Invalid project ID");
-        }
-
+        if (!id || typeof id !== "string") throw new Error("Invalid project ID");
         const docRef = doc(db, "projects", id);
         const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          console.log(docSnap.data())
-          setProject({ id: docSnap.id, ...docSnap.data() } as Project);
-        } else {
-          console.error("No such project!");
-        }
+        if (docSnap.exists()) setProject({ id: docSnap.id, ...docSnap.data() } as Project);
+        else console.error("No such project!");
       } catch (error) {
         console.error("Error fetching project:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProject();
   }, [id]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!project) {
-    return <div>Project not found</div>;
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-500";
-      case "In Progress":
-        return "bg-blue-500";
-      case "Not Started":
-        return "bg-gray-500";
-      default:
-        return "bg-accent";
-    }
-  };
+  if (loading) return <div>Loading...</div>;
+  if (!project) return <div>Project not found</div>;
 
   return (
     <div className="space-y-6">
@@ -92,7 +74,7 @@ export default function ProjectDetail() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-3xl font-bold">{displayValue(project.title)}</h1>
-        {project.status && <Badge className={getStatusColor(project.status)}>{project.status}</Badge>}
+        {/* {project.status && <Badge className={getStatusColor(project.status)}>{project.status}</Badge>} */}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -104,6 +86,7 @@ export default function ProjectDetail() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 space-y-6">
+          {/* Project Description */}
           <Card>
             <CardHeader>
               <CardTitle>Project Description</CardTitle>
@@ -113,74 +96,137 @@ export default function ProjectDetail() {
             </CardContent>
           </Card>
 
+          {/* Core Details and Requirements */}
           <div className="grid gap-6 md:grid-cols-2">
-            {/* <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Start Date:</span>
-                    <span>{displayValue(project.startDate)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">End Date:</span>
-                    <span>{displayValue(project.endDate)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium">Duration:</span>
-                    <span>{displayValue(project.duration)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card> */}
-
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
-                  Details
+                  Project Details
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
+                <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Category:</span>
+                    <span className="font-medium">Category:</span>
                     <span>{displayValue(project.category)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Supervisor:</span>
+                    <span className="font-medium">Type:</span>
+                    <span>{displayValue(project.type)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Batch:</span>
+                    <span>{displayValue(project.batch)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium">Supervisor:</span>
                     <span>{displayValue(project.supervisor)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium">Team Size:</span>
+                    <span className="font-medium">Project Date:</span>
+                    <span>{displayValue(project.date)}</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="font-medium">Team Size:</span>
                     <span>{project.teamMembers?.length || 0} members</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Requirements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 text-sm">
+                  <div>
+                    <h4 className="font-medium">Hardware Requirements:</h4>
+                    {project.hardwareRequirements?.length > 0 ? (
+                      <ul className="list-disc list-inside">
+                        {project.hardwareRequirements.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted-foreground">None specified.</p>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Software Requirements:</h4>
+                    {project.softwareRequirements?.length > 0 ? (
+                      <ul className="list-disc list-inside">
+                        {project.softwareRequirements.map((item, idx) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-muted-foreground">None specified.</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
+          {/* Technologies */}
           <Card>
             <CardHeader>
               <CardTitle>Technologies Used</CardTitle>
             </CardHeader>
             <CardContent>
-              {project.technologies && project.technologies.length > 0 ? (
+              {project.technologies?.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {project.technologies.map((tech: string) => (
-                    <Badge key={tech} variant="outline">
-                      {displayValue(tech)}
-                    </Badge>
+                  {project.technologies.map((tech) => (
+                    <Badge key={tech} variant="default" className="capitalize">{tech}</Badge>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No technologies listed.</p>
+                <p className="text-muted-foreground">No technologies listed.</p>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Links */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <ArrowUpRight className="h-5 w-5" />
+                Project Links
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm">
+                {project.githubLink ? (
+                  <a
+                    href={project.githubLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <Github className="h-5 w-5" /> GitHub Repo
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">GitHub link not provided.</span>
+                )}
+                {project.deployedLink ? (
+                  <a
+                    href={project.deployedLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-primary hover:underline"
+                  >
+                    <ArrowUpRight className="h-5 w-5" /> Live Demo
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">Live link not provided.</span>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -195,84 +241,33 @@ export default function ProjectDetail() {
               <CardDescription>{project.teamMembers?.length || 0} members working on this project</CardDescription>
             </CardHeader>
             <CardContent>
-              {project.teamMembers && project.teamMembers.length > 0 ? (
+              {project.teamMembers?.length > 0 ? (
                 <div className="divide-y">
                   {project.teamMembers.map((member, index) => (
                     <div key={index} className="py-4 first:pt-0 last:pb-0">
                       <div className="font-medium">{displayValue(member.name)}</div>
-
-                      <div className="mt-1">
-                        <Badge variant="outline">{displayValue(member.enrollment)}</Badge>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs">
+                        <Badge variant="outline"><UserRound/>{displayValue(member.enrollment)}</Badge>
+                        <Badge variant="outline"><Mail/>{displayValue(member.email)}</Badge>
+                        <Badge variant="outline"><Phone/>{displayValue(member.phone)}</Badge>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No team members assigned.</p>
+                <p className="text-muted-foreground">No team members assigned.</p>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="milestones" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Project Milestones
-              </CardTitle>
-              <CardDescription>Track the progress of project milestones</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {project.milestones && project.milestones.length > 0 ? (
-                <div className="space-y-6">
-                  {project.milestones.map((milestone, index) => (
-                    <div key={index} className="flex items-start gap-4">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium">{displayValue(milestone.title)}</h3>
-                          {milestone.status && <Badge className={getStatusColor(milestone.status)}>{milestone.status}</Badge>}
-                        </div>
-                        <p className="mt-1 text-sm text-muted-foreground">Due: {displayValue(milestone.date)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No milestones defined.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* <TabsContent value="milestones" className="mt-6">
+          ...
+        </TabsContent> */}
 
-        <TabsContent value="updates" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Project Updates
-              </CardTitle>
-              <CardDescription>Recent updates and progress reports</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {project.updates && project.updates.length > 0 ? (
-                <div className="space-y-6">
-                  {project.updates.map((update, index) => (
-                    <div key={index} className="border-l-2 border-muted pl-4">
-                      <div className="text-sm font-medium">{displayValue(update.date)}</div>
-                      <p className="mt-1">{displayValue(update.content)}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No updates available.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* <TabsContent value="updates" className="mt-6">
+          ...
+        </TabsContent> */}
       </Tabs>
     </div>
   );

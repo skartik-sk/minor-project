@@ -85,33 +85,33 @@ export default function AuthPage() {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      await setDoc(doc(db, "users", user.uid), {
-        name: user.displayName,
-        email: user.email,
-      });
-      router.push("/dashboard");
-    } catch (error) {
-      console.error(`${mode} with Google failed:`, error); // Log the full error for debugging
-      let errorMessage = "Google authentication failed. Please try again.";
-      if (error instanceof FirebaseError) {
-        const shortCode = error.code.replace("auth/", "");
-        errorMessage = shortCode
-          .replaceAll("-", " ")
-          .replace(/^./, (str: string) => str.toUpperCase());
-      } else if (error instanceof Error) {
-        // Fallback for other types of errors
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleGoogleAuth = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const result = await signInWithPopup(auth, googleProvider);
+  //     const user = result.user;
+  //     await setDoc(doc(db, "users", user.uid), {
+  //       name: user.displayName,
+  //       email: user.email,
+  //     });
+  //     router.push("/dashboard");
+  //   } catch (error) {
+  //     console.error(`${mode} with Google failed:`, error); // Log the full error for debugging
+  //     let errorMessage = "Google authentication failed. Please try again.";
+  //     if (error instanceof FirebaseError) {
+  //       const shortCode = error.code.replace("auth/", "");
+  //       errorMessage = shortCode
+  //         .replaceAll("-", " ")
+  //         .replace(/^./, (str: string) => str.toUpperCase());
+  //     } else if (error instanceof Error) {
+  //       // Fallback for other types of errors
+  //       errorMessage = error.message;
+  //     }
+  //     toast.error(errorMessage);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -213,7 +213,7 @@ export default function AuthPage() {
                 ? "Login"
                 : "Create account"}
             </Button>
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               className="w-full"
@@ -225,7 +225,7 @@ export default function AuthPage() {
                   ? "Signing in with Google..."
                   : "Signing up with Google..."
                 : "Continue with Google"}
-            </Button>
+            </Button> */}
             <p className="text-sm text-center text-muted-foreground pt-2">
               {mode === "login" ? (
                 <>
