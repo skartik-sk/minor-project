@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar"
 import { auth } from "@/lib/utils"
 import { onAuthStateChanged, signOut } from "firebase/auth"
-import { Home, List, LogOut, Menu, PlusCircle, Settings, X } from "lucide-react"
+import { Home, LogOut, Menu, PlusCircle, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"

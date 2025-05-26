@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { auth, db } from "@/lib/utils";
 import {
-  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithPopup,
   onAuthStateChanged,
+  signInWithEmailAndPassword
 } from "firebase/auth";
-import { auth, googleProvider, db } from "@/lib/utils";
 import { doc, setDoc } from "firebase/firestore";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
+import SessionLoading from "@/components/session-checking";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -23,9 +21,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import toast from "react-hot-toast";
-import SessionLoading from "@/components/session-checking";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { FirebaseError } from "firebase/app";
+import toast from "react-hot-toast";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");

@@ -91,9 +91,7 @@ export default function CreateProject() {
   );
 
   const onFileReject = React.useCallback((file: File, message: string) => {
-    toast.error(message, {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" was rejected.`,
-    });
+    toast.error(message);
   }, []);
 
   // --- Helper Functions ---
