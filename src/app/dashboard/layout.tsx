@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar"
 import { auth } from "@/lib/utils"
 import { onAuthStateChanged, signOut } from "firebase/auth"
-import { Home, LogOut, Menu, PlusCircle, X } from "lucide-react"
+import { Home, LogOut, Menu, PanelRight, PlusCircle, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
@@ -29,6 +29,7 @@ export default function DashboardLayout({
   const [mobileOpen, setMobileOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -132,43 +133,57 @@ export default function DashboardLayout({
           </nav>
         </aside>
 
-   <div className="hidden lg:flex">
-      <Sidebar>
-        <SidebarHeader className="p-4">
-          <h1 className="text-xl font-bold">Minor Projects</h1>
-        </SidebarHeader>
-        <SidebarContent className="p-4">
-          <SidebarMenu>
-            {navigation.map((item) => (
-              <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton asChild isActive={pathname === item.href}>
-                  <Link href={item.href}>
-                    <item.icon className="mr-3 h-5 w-5" />
-                    <span>{item.name}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className="p-4">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              {/* Directly use the Button as the interactive element */}
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-destructive hover:bg-destructive/10"
-                onClick={handleSignOut}
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Logout
-              </Button>
+<div className="hidden lg:flex">
+  {sidebarOpen && (
+    <Sidebar>
+      <SidebarHeader className="flex items-center justify-between p-4">
+      <div className="flex  gap-4 items-center">
+        <h1 className="text-xl font-bold">Minor Projects</h1>
+        <Button variant="ghost" size="icon" className="cursor-pointer" onClick={() => setSidebarOpen(false)}>
+          <PanelRight className="h-5 w-5 "  />
+        </Button>
+      </div>
+        
+      </SidebarHeader>
+      <SidebarContent className="p-4">
+        <SidebarMenu>
+          {navigation.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild isActive={pathname === item.href}>
+                <Link href={item.href}>
+                  <item.icon className="mr-3 h-5 w-5" />
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-    </div>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-destructive hover:bg-destructive/10"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-3 h-5 w-5" />
+              Logout
+            </Button>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
+  )}
 
+  {!sidebarOpen && (
+    <div className="flex h-full items-start p-2">
+      <Button className="cursor-pointer" variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+        <Menu className="h-6 w-6" />
+      </Button>
+    </div>
+  )}
+</div>
 
       </div>
 

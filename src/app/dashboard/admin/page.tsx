@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import * as XLSX from "xlsx"; 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,6 +69,10 @@ export default function ProjectsList() {
     return matchesSearch && matchesCategory
   })
 
+   const displayValue = (value: string | undefined | null, fallback: string = "N/A") => {
+    return value || fallback;
+  };
+
   // Removed getStatusColor since there is no status property
 const getCategoryColor = (category: string) => {
   switch (category) {
@@ -88,6 +93,29 @@ const getCategoryColor = (category: string) => {
   }
 };
 
+const exportToExcel = () => {
+  const formattedProjects = filteredProjects.map((project) => ({
+    Title: displayValue(project.title),
+    Description: displayValue(project.description),
+    Category: displayValue(project.category),
+    Supervisor: displayValue(project.supervisor),
+    Date: displayValue(project.date),
+    Type: displayValue(project.type),
+    Batch: displayValue(project.batch),
+    GitHub_Link: displayValue(project.githubLink),
+    Deployed_Link: displayValue(project.deployedLink),
+    Technologies: project.technologies?.join(", ") || "None",
+    Software_Requirements: project.softwareRequirements?.join(", ") || "None",
+    Hardware_Requirements: project.hardwareRequirements?.join(", ") || "None",
+    Team_Members: project.teamMembers?.map((member) => `${member.name} (${member.email})`).join("; ") || "No members",
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(formattedProjects);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Projects");
+  XLSX.writeFile(workbook, "projects.xlsx");
+};
+ 
 
   return (
     <div className="space-y-6">
@@ -123,6 +151,11 @@ const getCategoryColor = (category: string) => {
             </SelectContent>
           </Select>
         </div>
+
+
+        <Button onClick={exportToExcel} className="bg-accent text-accent-foreground hover:bg-accent-dark">
+          Export to Excel
+        </Button>
       </div>
 
       <div className="flex flex-col lg:flex-row lg:gap-6">
