@@ -30,10 +30,14 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const ADMIN_EMAIL = "admin.cse@gmail.com";
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Create Project", href: "/dashboard/create", icon: PlusCircle },
+    ...(isAdmin ? [{ name: "Admin Panel", href: "/dashboard/admin", icon: Home }] : []),
   ]
 
   const handleSignOut = async () => {
@@ -50,6 +54,8 @@ export default function DashboardLayout({
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setIsAuthenticated(true)
+        // Check if user is admin
+        setIsAdmin(user.email === ADMIN_EMAIL)
         setLoading(false)
       } else {
         setIsAuthenticated(false)

@@ -1,10 +1,11 @@
 "use client";
 
-import { auth, db } from "@/lib/utils";
+import { auth, googleProvider, db } from "@/lib/utils";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signInWithPopup,
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import Link from "next/link";
@@ -32,7 +33,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-   const [showCriteria, setShowCriteria] = useState(false);
+  const [showCriteria, setShowCriteria] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,15 +42,23 @@ export default function AuthPage() {
 
   const router = useRouter();
 
+  const ADMIN_EMAIL = "admin.cse@gmail.com";
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) router.push("/dashboard");
-      else setCheckingAuth(false);
+      if (user) {
+        // Check if user is admin and redirect accordingly
+        if (user.email === ADMIN_EMAIL) {
+          router.push("/dashboard/admin");
+        } else {
+          router.push("/dashboard");
+        }
+      } else setCheckingAuth(false);
     });
     return () => unsub();
   }, [router]);
 
-    const criteria = [
+  const criteria = [
     {
       label: "At least 8 characters",
       valid: password.length >= 8,
@@ -76,8 +85,15 @@ export default function AuthPage() {
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Redirect based on user role
+      if (user.email === ADMIN_EMAIL) {
+        router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       const code = (error as FirebaseError).code || "auth/unknown";
       const shortCode = code.replace("auth/", "");
@@ -101,7 +117,13 @@ export default function AuthPage() {
         email,
         enrollment,
       });
-      router.push("/dashboard");
+      
+      // Redirect based on user role
+      if (user.email === ADMIN_EMAIL) {
+        router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
       const code = (error as FirebaseError).code || "auth/unknown";
       const shortCode = code.replace("auth/", "");
@@ -112,33 +134,39 @@ export default function AuthPage() {
     }
   };
 
-  // const handleGoogleAuth = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     const result = await signInWithPopup(auth, googleProvider);
-  //     const user = result.user;
-  //     await setDoc(doc(db, "users", user.uid), {
-  //       name: user.displayName,
-  //       email: user.email,
-  //     });
-  //     router.push("/dashboard");
-  //   } catch (error) {
-  //     console.error(`${mode} with Google failed:`, error); // Log the full error for debugging
-  //     let errorMessage = "Google authentication failed. Please try again.";
-  //     if (error instanceof FirebaseError) {
-  //       const shortCode = error.code.replace("auth/", "");
-  //       errorMessage = shortCode
-  //         .replaceAll("-", " ")
-  //         .replace(/^./, (str: string) => str.toUpperCase());
-  //     } else if (error instanceof Error) {
-  //       // Fallback for other types of errors
-  //       errorMessage = error.message;
-  //     }
-  //     toast.error(errorMessage);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      await setDoc(doc(db, "users", user.uid), {
+        name: user.displayName,
+        email: user.email,
+      });
+      
+      // Redirect based on user role
+      if (user.email === ADMIN_EMAIL) {
+        router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      console.error(`${mode} with Google failed:`, error); // Log the full error for debugging
+      let errorMessage = "Google authentication failed. Please try again.";
+      if (error instanceof FirebaseError) {
+        const shortCode = error.code.replace("auth/", "");
+        errorMessage = shortCode
+          .replaceAll("-", " ")
+          .replace(/^./, (str: string) => str.toUpperCase());
+      } else if (error instanceof Error) {
+        // Fallback for other types of errors
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

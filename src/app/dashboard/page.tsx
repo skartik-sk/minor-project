@@ -11,16 +11,26 @@ import { useEffect, useState } from "react"
 import { onAuthStateChanged } from "firebase/auth"
 import { ModeToggle } from "@/components/toggle-theme"
 import { Project } from "@/types/project"
+import { useRouter } from "next/navigation"
 
 
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  const ADMIN_EMAIL = "admin.cse@gmail.com"
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // Redirect admin users to admin panel
+        if (user.email === ADMIN_EMAIL) {
+          router.push("/dashboard/admin")
+          return
+        }
+
         try {
           const q = query(collection(db, "projects"), where("userId", "==", user.uid))
           const docs = await getDocs(q)
@@ -35,7 +45,7 @@ export default function Dashboard() {
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [router])
 
   if (loading) {
     return (

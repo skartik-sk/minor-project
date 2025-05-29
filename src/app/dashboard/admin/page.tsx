@@ -1,30 +1,34 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import * as XLSX from "xlsx"; 
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter } from "lucide-react"
-import { db } from "@/lib/utils"
+import { db, auth } from "@/lib/utils"
 import { collection, getDocs } from "firebase/firestore"
-import { Project } from "@/types/project";
+import { signOut } from "firebase/auth"
+import * as XLSX from "xlsx"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AlertCircle, LogOut, ArrowLeft, Search, Filter } from "lucide-react"
+import Link from "next/link"
+import type { Project } from "@/types/project"
 
-
-
-export default function ProjectsList() {
-  const [projects, setProjects] = useState<Project[]>([]); // Properly typed state
+export default function AdminDashboard() {
+  const [projects, setProjects] = useState<Project[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
+  const [yearFilter, setYearFilter] = useState("all")
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, "projects"))
-        const fetchedProjects = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Project[]
+        const fetchedProjects = querySnapshot.docs.map((doc) => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        })) as Project[]
         setProjects(fetchedProjects)
       } catch (error) {
         console.error("Error fetching projects:", error)
@@ -36,39 +40,47 @@ export default function ProjectsList() {
 
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.supervisor.toLowerCase().includes(searchTerm.toLowerCase())
+      project.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.supervisor?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    // Removed status filter as it's not part of the Project interface
     const matchesCategory = categoryFilter === "all" || project.category === categoryFilter
+    
+    const projectYear = project.date ? new Date(project.date).getFullYear().toString() : ""
+    const matchesYear = yearFilter === "all" || projectYear === yearFilter
 
-    return matchesSearch && matchesCategory
+    return matchesSearch && matchesCategory && matchesYear
   })
 
-   const displayValue = (value: string | undefined | null, fallback: string = "N/A") => {
-    return value || fallback;
-  };
-
-  // Removed getStatusColor since there is no status property
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case "software":
-      return "bg-blue-500 hover:bg-blue-600";
-    case "hardware":
-      return "bg-green-500 hover:bg-green-600";
-    case "ai":
-      return "bg-purple-500 hover:bg-purple-600";
-    case "web":
-      return "bg-yellow-500 hover:bg-yellow-600";
-    case "mobile":
-      return "bg-red-500 hover:bg-red-600";
-    case "other":
-      return "bg-gray-500 hover:bg-gray-600";
-    default:
-      return "bg-gray-500 hover:bg-gray-600";
+  const displayValue = (value: string | undefined | null, fallback: string = "N/A") => {
+    return value || fallback
   }
-};
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "software":
+        return "bg-blue-500 hover:bg-blue-600"
+      case "hardware":
+        return "bg-green-500 hover:bg-green-600"
+      case "ai":
+        return "bg-purple-500 hover:bg-purple-600"
+      case "web":
+        return "bg-yellow-500 hover:bg-yellow-600"
+      case "mobile":
+        return "bg-red-500 hover:bg-red-600"
+      case "other":
+        return "bg-gray-500 hover:bg-gray-600"
+      default:
+        return "bg-gray-500 hover:bg-gray-600"
+    }
+  }
+
+  const getAvailableYears = () => {
+    const years = projects
+      .map(project => project.date ? new Date(project.date).getFullYear().toString() : "")
+      .filter(year => year !== "")
+    return [...new Set(years)].sort().reverse()
+  }
 
   const exportToExcel = () => {
     // Prepare data
@@ -87,39 +99,47 @@ const getCategoryColor = (category: string) => {
       Software_Requirements: proj.softwareRequirements?.join(', ') || 'None',
       Hardware_Requirements: proj.hardwareRequirements?.join(', ') || 'None',
       Team_Members: proj.teamMembers?.map(m => `${m.name} (${m.email})`).join('; ') || 'No members',
-    }));
+    }))
 
     // Create sheet and workbook
-    const ws = XLSX.utils.json_to_sheet(formatted);
-    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(formatted)
+    const wb = XLSX.utils.book_new()
 
     // Style header row
-    const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1')
     for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
-      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
-      if (cell && !cell.s) cell.s = {};
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })]
+      if (cell && !cell.s) cell.s = {}
       cell.s = {
         font: { bold: true, color: { rgb: 'FFFFFFFF' } },
         fill: { fgColor: { rgb: 'FF4472C4' } },
         alignment: { horizontal: 'center', vertical: 'center' }
-      };
+      }
     }
 
     // Set column widths
-    const colWidths = Object.keys(formatted[0] || {}).map(key => ({ wch: Math.min(30, key.length + 5) }));
-    ws['!cols'] = colWidths;
+    const colWidths = Object.keys(formatted[0] || {}).map(key => ({ wch: Math.min(30, key.length + 5) }))
+    ws['!cols'] = colWidths
 
     // Freeze header
-    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 }
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Projects');
-    XLSX.writeFile(wb, `projects_${new Date().toISOString().slice(0,10)}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, 'Projects')
+    XLSX.writeFile(wb, `projects_${new Date().toISOString().slice(0,10)}.xlsx`)
   }
- 
-
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">All Projects</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="px-3 py-1">
+            {filteredProjects.length} projects
+          </Badge>
+          <Button onClick={exportToExcel} className="bg-accent text-accent-foreground hover:bg-accent-dark">
+            Export to Excel
+          </Button>
+        </div>
+      </div>
 
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="relative flex-1">
@@ -128,14 +148,13 @@ const getCategoryColor = (category: string) => {
             placeholder="Search projects..."
             className="pl-10"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          {/* Removed Status Filter */}
-
+          
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter by category" />
@@ -150,12 +169,19 @@ const getCategoryColor = (category: string) => {
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Filter by year" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              {getAvailableYears().map(year => (
+                <SelectItem key={year} value={year}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-
-        <Button onClick={exportToExcel} className="bg-accent text-accent-foreground hover:bg-accent-dark">
-          Export to Excel
-        </Button>
       </div>
 
       <div className="flex flex-col lg:flex-row lg:gap-6">
@@ -169,18 +195,30 @@ const getCategoryColor = (category: string) => {
               {filteredProjects.map((project) => (
                 <div
                   key={project.id}
-                  className={`cursor-pointer p-4 transition-colors hover:bg-muted/50 ${selectedProject === project.id ? "bg-muted" : ""
-                    }`}
+                  className={`cursor-pointer p-4 transition-colors hover:bg-muted/50 ${
+                    selectedProject === project.id ? "bg-muted" : ""
+                  }`}
                   onClick={() => setSelectedProject(project.id)}
                 >
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium">{project.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{project.description}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        {/* Changed to category badge */}
-                        <Badge className={`${getCategoryColor(project.category)} capitalize`}>{project.category}</Badge>
-                        <span className="text-xs text-muted-foreground">{project.date}</span>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{displayValue(project.title)}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {displayValue(project.description)}
+                      </p>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <Badge className={`${getCategoryColor(project.category || "")} text-white capitalize`}>
+                          {displayValue(project.category)}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {displayValue(project.type)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {displayValue(project.date)}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          Team: {project.teamMembers?.length || 0}
+                        </span>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="ml-2 shrink-0" asChild>
@@ -213,30 +251,74 @@ const getCategoryColor = (category: string) => {
                   return (
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-lg font-medium">{project.title}</h3>
-                        {/* Changed to category badge */}
-                        <Badge className={`mt-2 ${getCategoryColor(project.category)} capitalize`}>{project.category}</Badge>
+                        <h3 className="text-lg font-medium">{displayValue(project.title)}</h3>
+                        <Badge className={`mt-2 ${getCategoryColor(project.category || "")} text-white capitalize`}>
+                          {displayValue(project.category)}
+                        </Badge>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">Description</h4>
-                        <p className="mt-1">{project.description}</p>
+                        <p className="mt-1 text-sm">{displayValue(project.description)}</p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <h4 className="text-sm font-medium text-muted-foreground">Category</h4>
-                          <p className="mt-1">{project.category}</p>
+                          <p className="mt-1 text-sm">{displayValue(project.category)}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">Type</h4>
+                          <p className="mt-1 text-sm">{displayValue(project.type)}</p>
                         </div>
                         <div>
                           <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
-                          <p className="mt-1">{project.date}</p>
+                          <p className="mt-1 text-sm">{displayValue(project.date)}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">Batch</h4>
+                          <p className="mt-1 text-sm">{displayValue(project.batch)}</p>
                         </div>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-medium text-muted-foreground">Supervisor</h4>
-                        <p className="mt-1">{project.supervisor}</p>
+                        <p className="mt-1 text-sm">{displayValue(project.supervisor)}</p>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground">Team Members</h4>
+                        <p className="mt-1 text-sm">{project.teamMembers?.length || 0} members</p>
+                        {project.teamMembers && project.teamMembers.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {project.teamMembers.slice(0, 3).map((member, idx) => (
+                              <div key={idx} className="text-xs text-muted-foreground">
+                                {displayValue(member.name)} ({displayValue(member.email)})
+                              </div>
+                            ))}
+                            {project.teamMembers.length > 3 && (
+                              <div className="text-xs text-muted-foreground">
+                                +{project.teamMembers.length - 3} more
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-medium text-muted-foreground">Technologies</h4>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {project.technologies?.slice(0, 4).map((tech, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {tech}
+                            </Badge>
+                          ))}
+                          {(project.technologies?.length || 0) > 4 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{(project.technologies?.length || 0) - 4}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
 
                       <Button className="w-full" variant="default" asChild>
