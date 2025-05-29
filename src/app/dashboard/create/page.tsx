@@ -12,6 +12,7 @@ import { X, Upload } from "lucide-react";
 import { db, auth } from "@/lib/utils";
 import { collection, addDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
+import {upload as imagekitUpload} from "@imagekit/next"
 
 // File Upload Components
 import {
@@ -155,7 +156,11 @@ export default function CreateProject() {
   ) => {
     setList(prev => prev.filter((_, i) => i !== index));
   };
-
+  const getAuthParams = async () => {
+    const res = await fetch('/api/upload-auth');
+    if (!res.ok) throw new Error('Upload auth failed');
+    return res.json();
+  };
   // --- Submit Handler ---
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -180,7 +185,7 @@ export default function CreateProject() {
       return;
     }
 
-    let fileDownloadURL: string | null = null;
+ 
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -192,25 +197,19 @@ export default function CreateProject() {
 
       // --- File Upload to Cloudinary via API Route ---
       const fileToUpload = projectFile[0];
-      const formData = new FormData();
-      formData.append('file', fileToUpload);
+        const authParams = await getAuthParams();
+      const uploadResponse = await imagekitUpload({
+        file: fileToUpload,
+        fileName: fileToUpload.name,
+        publicKey: authParams.publicKey,
+        signature: authParams.signature,
+        expire: authParams.expire,
+        token: authParams.token,
+      });
 
-      // const uploadResponse = await fetch('/api/upload', {
-      //   method: 'POST',
-      //   body: formData,
-      // });
-
-
-      // console.log(uploadResponse)
-      // if (!uploadResponse.ok) {
-      //   const errorData = await uploadResponse.json();
-      //   throw new Error(errorData.error || 'Failed to upload file.');
-      // }
-
-      // const uploadResult = await uploadResponse.json();
-      // fileDownloadURL = uploadResult.url;
-      // toast.success("File uploaded to Cloudinary!");
-
+const fileDownloadURL = uploadResponse.url;
+      toast.success("File uploaded successfully.");
+  
 
       // --- Save Project Data to Firestore ---
       await addDoc(collection(db, "projects"), {
@@ -227,10 +226,9 @@ export default function CreateProject() {
         softwareRequirements,
         type: projectType,
         userId: user.uid,
-        status: "Pending Review",
         date: new Date().toLocaleDateString('en-GB'),
         createdAt: new Date().toISOString(),
-        // projectFileUrl: fileDownloadURL, 
+         projectFileUrl: fileDownloadURL,
       });
 
       toast.success("Project created successfully!");
@@ -243,6 +241,7 @@ export default function CreateProject() {
     }
   };
 
+  
   return (
     <div className="mx-auto max-w-3xl py-8 px-4">
       <h1 className="mb-6 text-2xl font-semibold text-center">Create New Project</h1>
@@ -395,7 +394,7 @@ export default function CreateProject() {
             </div>
 
             {/* File Upload Section */}
-            <div className="space-y-2">
+          <div className="space-y-2">
               <Label htmlFor="projectFile" className="text-sm font-medium">Upload Project File (PDF) *</Label>
               <FileUpload
                 value={projectFile}

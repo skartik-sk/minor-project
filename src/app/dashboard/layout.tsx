@@ -33,7 +33,7 @@ export default function DashboardLayout({
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "Create Project", href: "/dashboard/create", icon: PlusCircle }
+    { name: "Create Project", href: "/dashboard/create", icon: PlusCircle },
   ]
 
   const handleSignOut = async () => {

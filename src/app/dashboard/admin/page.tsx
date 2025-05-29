@@ -10,32 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Filter } from "lucide-react"
 import { db } from "@/lib/utils"
 import { collection, getDocs } from "firebase/firestore"
+import { Project } from "@/types/project";
 
-interface Member {
-  email: string
-  enrollment: string
-  name: string
-  phone: string
-}
 
-interface Project {
-  id: string
-  title: string
-  description: string
-  date: string
-  teamMembers: Member[]
-  batch: string
-  category: string
-  createdAt: string
-  deployedLink: string
-  githubLink: string
-  hardwareRequirements: string[]
-  softwareRequirements: string[]
-  supervisor: string
-  technologies: string[]
-  type: string
-  userId: string
-}
 
 export default function ProjectsList() {
   const [projects, setProjects] = useState<Project[]>([]); // Properly typed state
@@ -93,28 +70,51 @@ const getCategoryColor = (category: string) => {
   }
 };
 
-const exportToExcel = () => {
-  const formattedProjects = filteredProjects.map((project) => ({
-    Title: displayValue(project.title),
-    Description: displayValue(project.description),
-    Category: displayValue(project.category),
-    Supervisor: displayValue(project.supervisor),
-    Date: displayValue(project.date),
-    Type: displayValue(project.type),
-    Batch: displayValue(project.batch),
-    GitHub_Link: displayValue(project.githubLink),
-    Deployed_Link: displayValue(project.deployedLink),
-    Technologies: project.technologies?.join(", ") || "None",
-    Software_Requirements: project.softwareRequirements?.join(", ") || "None",
-    Hardware_Requirements: project.hardwareRequirements?.join(", ") || "None",
-    Team_Members: project.teamMembers?.map((member) => `${member.name} (${member.email})`).join("; ") || "No members",
-  }));
+  const exportToExcel = () => {
+    // Prepare data
+    const formatted = filteredProjects.map(proj => ({
+      Title: displayValue(proj.title),
+      Description: displayValue(proj.description),
+      Category: displayValue(proj.category),
+      Supervisor: displayValue(proj.supervisor),
+      Date: displayValue(proj.date),
+      Type: displayValue(proj.type),
+      Batch: displayValue(proj.batch),
+      GitHub_Link: displayValue(proj.githubLink),
+      Deployed_Link: displayValue(proj.deployedLink),
+      Progress_Report: displayValue(proj.projectFileUrl),
+      Technologies: proj.technologies?.join(', ') || 'None',
+      Software_Requirements: proj.softwareRequirements?.join(', ') || 'None',
+      Hardware_Requirements: proj.hardwareRequirements?.join(', ') || 'None',
+      Team_Members: proj.teamMembers?.map(m => `${m.name} (${m.email})`).join('; ') || 'No members',
+    }));
 
-  const worksheet = XLSX.utils.json_to_sheet(formattedProjects);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Projects");
-  XLSX.writeFile(workbook, "projects.xlsx");
-};
+    // Create sheet and workbook
+    const ws = XLSX.utils.json_to_sheet(formatted);
+    const wb = XLSX.utils.book_new();
+
+    // Style header row
+    const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+      const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+      if (cell && !cell.s) cell.s = {};
+      cell.s = {
+        font: { bold: true, color: { rgb: 'FFFFFFFF' } },
+        fill: { fgColor: { rgb: 'FF4472C4' } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+    }
+
+    // Set column widths
+    const colWidths = Object.keys(formatted[0] || {}).map(key => ({ wch: Math.min(30, key.length + 5) }));
+    ws['!cols'] = colWidths;
+
+    // Freeze header
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Projects');
+    XLSX.writeFile(wb, `projects_${new Date().toISOString().slice(0,10)}.xlsx`);
+  }
  
 
   return (

@@ -25,11 +25,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FirebaseError } from "firebase/app";
 import toast from "react-hot-toast";
+import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+   const [showCriteria, setShowCriteria] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,6 +48,31 @@ export default function AuthPage() {
     });
     return () => unsub();
   }, [router]);
+
+    const criteria = [
+    {
+      label: "At least 8 characters",
+      valid: password.length >= 8,
+    },
+    {
+      label: "Uppercase letter",
+      valid: /[A-Z]/.test(password),
+    },
+    {
+      label: "Lowercase letter",
+      valid: /[a-z]/.test(password),
+    },
+    {
+      label: "Number",
+      valid: /[0-9]/.test(password),
+    },
+    {
+      label: "Special character",
+      valid: /[^A-Za-z0-9]/.test(password),
+    },
+  ];
+
+  const allValid = criteria.every((c) => c.valid);
 
   const handleLogin = async () => {
     try {
@@ -192,18 +220,40 @@ export default function AuthPage() {
                   </Link>
                 )}
               </div>
-              <Input
+                   <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => mode === "signup" && setShowCriteria(true)}
                 required
               />
+
+                  {mode === "signup" && showCriteria && (
+                <div className="mt-2 grid grid-cols-1 gap-2">
+                  {criteria.map((c) => (
+                    <Badge
+                      key={c.label}
+                      variant={c.valid ? "outline" : "destructive"}
+                      className="flex items-center space-x-2"
+                    >
+                      {c.valid ? <Check size={16} /> : <X size={16} />}
+                      <span className="text-sm">{c.label}</span>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4 pt-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={
+                isLoading || (mode === "signup" && !allValid)
+              }
+            >
               {isLoading
                 ? mode === "login"
                   ? "Logging in..."

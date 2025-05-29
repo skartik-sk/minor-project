@@ -4,38 +4,15 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { PlusCircle, ArrowRight, ArrowUpRight, Loader2, Github } from "lucide-react"
+import { PlusCircle, ArrowRight, ArrowUpRight, Loader2, Github, FileText } from "lucide-react"
 import { db, auth } from "@/lib/utils"
 import { collection, query, where, getDocs } from "firebase/firestore"
 import { useEffect, useState } from "react"
 import { onAuthStateChanged } from "firebase/auth"
 import { ModeToggle } from "@/components/toggle-theme"
+import { Project } from "@/types/project"
 
-interface Member {
-  email: string
-  enrollment: string
-  name: string
-  phone: string
-}
 
-interface Project {
-  id: string
-  title: string
-  description: string
-  date: string
-  teamMembers: Member[]
-  batch: string
-  category: string
-  createdAt: string
-  deployedLink: string
-  githubLink: string
-  hardwareRequirements: string[]
-  softwareRequirements: string[]
-  supervisor: string
-  technologies: string[]
-  type: string
-  userId: string
-}
 
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -100,6 +77,7 @@ export default function Dashboard() {
       <div className="flex items-center flex-wrap gap-2">
         {project.type && <Badge variant="secondary" className="capitalize">{project.type}</Badge>}
         {project.category && <Badge variant="secondary" className="capitalize">{project.category}</Badge>}
+      
       </div>
       <div className="flex items-center gap-2">
         {project.githubLink && (
@@ -110,6 +88,16 @@ export default function Dashboard() {
           className="text-primary hover:underline"
           >
             <Github className="h-4 w-4" />
+          </a>
+        )}
+        {project.projectFileUrl && (
+          <a
+          href={project.projectFileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline"
+          >
+            <FileText className="h-4 w-4" />
           </a>
         )}
         {project.deployedLink && (
