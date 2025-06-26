@@ -163,7 +163,7 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-muted-foreground">Batch:</span>
-                    <span>{displayValue(project.batch)}</span>
+                    <span>{`${Number(displayValue(project.batch))-4}-${displayValue(project.batch)}`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium text-muted-foreground">Supervisor:</span>

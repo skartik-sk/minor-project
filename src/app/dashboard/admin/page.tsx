@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
     const matchesCategory = categoryFilter === "all" || project.category === categoryFilter
     
-    const projectYear = project.date ? new Date(project.date).getFullYear().toString() : ""
+    const projectYear = project.batch
     const matchesYear = yearFilter === "all" || projectYear === yearFilter
 
     return matchesSearch && matchesCategory && matchesYear
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
 
   const getAvailableYears = () => {
     const years = projects
-      .map(project => project.date ? new Date(project.date).getFullYear().toString() : "")
+      .map(project => project.batch)
       .filter(year => year !== "")
     return [...new Set(years)].sort().reverse()
   }
